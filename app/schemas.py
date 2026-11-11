@@ -6,7 +6,7 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
-class ROle:
+class Role:
     CUSTOMER = "customer"
     ADMIN = "admin"
     ALL = {"customer", "admin"}
