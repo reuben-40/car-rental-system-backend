@@ -6,7 +6,6 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
-# ---------------------------------------------------------------------- enums
 class ROle:
     CUSTOMER = "customer"
     ADMIN = "admin"
@@ -32,7 +31,7 @@ class CarStatus:
 
 class BookingStatus:
     PENDING = "pending"
-    COFIRMED = "confirmed"
+    CONFIRMED = "confirmed"
     ACTIVE = "active"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
@@ -41,35 +40,33 @@ class BookingStatus:
 
 
 
-# ----------------------------------------------------------------- users
-    class User(BaseModel):
-        model_config = ConfigDict(from_attributes=True)
-        id: int 
-        full_name: str
-        email: EmailStr
-        phone: str
-        role: str
-        licence_number: Optional[str] = None
-        licence_expiry: Optional[str] = None
-        is_active: bool
-        created_at: str
+class User(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int 
+    full_name: str
+    email: EmailStr
+    phone: str
+    role: str
+    licence_number: Optional[str] = None
+    licence_expiry: Optional[str] = None
+    is_active: bool
+    created_at: str
 
 
-    class UserUpdate(BaseModel):
-        full_name: Optional[str] = None
-        phone: Optional[str] = None
-        licence_number: Optional[str] = None
-        licence_expiry: Optional[str] = None
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    licence_number: Optional[str] = None
+    licence_expiry: Optional[str] = None
 
 
-    class TokenResponse(BaseModel):
-        access_token: str
-        token_type: str = "bearer"
-        user: User
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: User
 
 
 
-# ---------------------------------------------------- categories
 class Category(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
@@ -77,7 +74,6 @@ class Category(BaseModel):
     description: str
 
 
-# ---------------------------------------------------- cars
 class CarBase(BaseModel):
     category_id: int
     make: str
@@ -102,7 +98,7 @@ class CarUpdate(BaseModel):
     make: Optional[str] = None
     model: Optional[str] = None
     year: Optional[int] = None
-    registration_nunmber: Optional[str] = None
+    registration_number: Optional[str] = None
     color: Optional[str] = None
     transmission: Optional[str] = None
     fuel_type: Optional[str] = None
@@ -137,7 +133,6 @@ class Paginated(BaseModel):
 
 
 
-# -----------------------------------------------------------extras
 class Extra(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
@@ -148,7 +143,6 @@ class Extra(BaseModel):
 
 
 
-# ------------------------------------------------------------- quote / booking
 class QuoteRequest(BaseModel):
     car_id: int
     start_date: str
@@ -167,7 +161,7 @@ class Quote(BaseModel):
 
 
 class BookingCreate(QuoteRequest):
-    picup_location: str
+    pickup_location: str
 
 
 
@@ -199,7 +193,6 @@ class Booking(BaseModel):
 
 
 
-# ------------------------------------------------------ dashboard
 class Dashboard(BaseModel):
     cars_on_hire: int 
     monthly_revenue: float

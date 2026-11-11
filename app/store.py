@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import datetime, timezone
 from threading import Lock
-from time import timezone
 
 from .pricing import add_days, calculate_quote, today_iso
 from .security import hash_password
@@ -17,8 +16,6 @@ _IMG_VAN = "https://images.pexels.com/photos/19548262/pexels-photo-19548262.jpeg
 def _img_for(category_id: int) -> str:
     return {1: _IMG_ECONOMY, 2: _IMG_SUV, 3: _IMG_LUXURY, 4: _IMG_VAN}.get(category_id, _IMG_SUV)
 
-# typed dicts - the store uses plain dicts so pydantic can adapt them.
-# Each "model" dict mirrors a schema in schemas.py.
 
 def _seed() -> dict:
     now = datetime.now(timezone.utc).isoformat()
@@ -39,13 +36,24 @@ def _seed() -> dict:
 
     def car(i, cid, mk, mdl, yr, reg, color, trans, fuel, seats, rate, mileage, status="available"):
         return {
-            "id": i, "category_id": cid, "make": mk, "model":mdl, "year": yr,
-            "registration_number": reg, "color": color, "transmission": trans,
-            "fuel_type": fuel, "seats": seats, "daily_rate": rate, "mileage": mileage, 
-            "status": status, "primary_image_url": _img_for(cid), "created_at": now,      
+            "id": i,
+            "category_id": cid,
+            "make": mk,
+            "model": mdl,
+            "year": yr,
+            "registration_number": reg,
+            "color": color,
+            "transmission": trans,
+            "fuel_type": fuel,
+            "seats": seats,
+            "daily_rate": rate,
+            "mileage": mileage,
+            "status": status,
+            "primary_image_url": _img_for(cid),
+            "created_at": now,
         }
 
-    cars =[
+    cars = [
         car(1, 1, "Toyota", "Axio", 2019, "KDK 214A", "White", "automatic", "petrol", 5, 4500, 61200),
         car(2, 1, "Mazda", "Demio", 2020, "KDM 882C", "Silver", "automatic", "petrol", 5, 3800, 48300),
         car(3, 1, "Toyota", "Aqua", 2021, "KDP 117F", "Blue", "automatic", "hybrid", 5, 4200, 33900),
@@ -60,25 +68,40 @@ def _seed() -> dict:
 
     users = [
         {
-        "id": 1, "full_name": "Wanjiru kamau", "email": "wanjiru@example.co.ke",
-        "phone": "+254 712 345 678", "role": "customer",
-        "password_hash": hash_password("demo1234"),
-        "licence_number": "DL-0048213", "licence_expiry": add_days(t, 900),
-        "is_active": True, "created_at": now,
+            "id": 1,
+            "full_name": "Wanjiru Kamau",
+            "email": "wanjiru@example.co.ke",
+            "phone": "+254 712 345 678",
+            "role": "customer",
+            "password_hash": hash_password("demo1234"),
+            "licence_number": "DL-0048213",
+            "licence_expiry": add_days(t, 900),
+            "is_active": True,
+            "created_at": now,
         },
         {
-            "id": 2, "full_name": "Admin", "email": "admin@lasquadradoro.com",
-            "phone": "+254 700 00 001", "role": "admin",
+            "id": 2,
+            "full_name": "Admin",
+            "email": "admin@lasquadradoro.com",
+            "phone": "+254 700 000 001",
+            "role": "admin",
             "password_hash": hash_password("demo1234"),
-            "licence_number": "None", "licence_expiry": None,
-            "is_active": True, "created_at": now,
+            "licence_number": None,
+            "licence_expiry": None,
+            "is_active": True,
+            "created_at": now,
         },
         {
-            "id": 3, "full_name": "otieno Ouma", "email": "otieno@example.com",
-            "phone": "+254 722 111 222", "role": "customer",
+            "id": 3,
+            "full_name": "Otieno Ouma",
+            "email": "otieno@example.com",
+            "phone": "+254 722 111 222",
+            "role": "customer",
             "password_hash": hash_password("demo1234"),
-            "licence_number": "DL-0099120", "licence_expiry": add_days(t, 600),
-            "is_active": True, "created_at": now,
+            "licence_number": "DL-0099120",
+            "licence_expiry": add_days(t, 600),
+            "is_active": True,
+            "created_at": now,
         },
     ]
 
@@ -90,7 +113,7 @@ def _seed() -> dict:
         nonlocal seq, booking_id
         extra_ids = extra_ids or []
         extra = extra or {}
-        c = next(x for x in cars if x ["id"] == car_id)
+        c = next(x for x in cars if x["id"] == car_id)
         ex = [e for e in extras if e["id"] in extra_ids]
         start = add_days(t, s_off)
         end = add_days(t, e_off)
@@ -98,52 +121,66 @@ def _seed() -> dict:
         seq += 1
         booking_id += 1
         bookings.append({
-            "id": booking_id, "reference": f"LSD-{seq}", "user_id": user["id"],
-            "car_id": car_id, "start_date": start, "end_date": end,
+            "id": booking_id,
+            "reference": f"LSD-{seq}",
+            "user_id": user["id"],
+            "car_id": car_id,
+            "start_date": start,
+            "end_date": end,
             "actual_return_date": extra.get("actual_return_date"),
             "pickup_location": "JKIA - Jomo Kenyatta Intl. Airport",
-            "daily_rate_snapshot": c["daily_rate"], "days": q["days"],
-            "subtotal": q["subtotal"], "extras_total": q["extras_total"],
-            "extras": ex, "tax": q["tax"], "total_amount": q["total_amount"],
-            "deposit": q["deposit"], "status": status,
+            "daily_rate_snapshot": c["daily_rate"],
+            "days": q["days"],
+            "subtotal": q["subtotal"],
+            "extras_total": q["extras_total"],
+            "extras": ex,
+            "tax": q["tax"],
+            "total_amount": q["total_amount"],
+            "deposit": q["deposit"],
+            "status": status,
             "pickup_mileage": extra.get("pickup_mileage"),
             "return_mileage": extra.get("return_mileage"),
-            "cancelled_out": None, "created-at": now,
+            "cancelled_at": None,
+            "created_at": now,
         })
 
-        cust = users[0]
-        other = users[2]
-        mk(cust, 4, -20, "completed", [2],
-           {"pickup_mileage": 40200, "return_mileage":41000, "actual_return_date": add_days(t, -15)})
-        mk(other, 7, -2, 3, "active", [], {"pickup_mileage": 18100})
-        mk(other, 5, -4, 1, "active", [1], {"pickup_mileage": 57200})
-        mk(cust, 1, 3, 7, "confirmed", [1, 2])
-        mk(other, 9,5,9, "pending", [3])
-        mk(cust, 8, 12, 15, "pending")
+    cust = users[0]
+    other = users[2]
+    mk(cust, 4, -20, -15, "completed", [2], {
+        "pickup_mileage": 40200,
+        "return_mileage": 41000,
+        "actual_return_date": add_days(t, -15),
+    })
+    mk(other, 7, -2, 3, "active", [], {"pickup_mileage": 18100})
+    mk(other, 5, -4, 1, "active", [1], {"pickup_mileage": 57200})
+    mk(cust, 1, 3, 7, "confirmed", [1, 2])
+    mk(other, 9, 5, 9, "pending", [3])
+    mk(cust, 8, 12, 15, "pending")
 
-        return {
-            "users": users,
-            "categories": categories,
-            "cars": cars,
-            "extras": extras,
-            "bokings": bookings,
-            "seq": seq,
-        }
+    return {
+        "users": users,
+        "categories": categories,
+        "cars": cars,
+        "extras": extras,
+        "bookings": bookings,
+        "seq": seq,
+    }
 
-    from datetime import datetime, timezone 
 
-    _store: dict | None = None
-    _lock = Lock()
+_store: dict | None = None
+_lock = Lock()
 
-    def get_store() -> dict: 
-        global _store
-        if _store is None:
-            with _lock:
-                if _store is None:
-                    _store = _seed()
-        return _store
 
-    def reset_store() -> None:
-        global _store
+def get_store() -> dict:
+    global _store
+    if _store is None:
         with _lock:
-            _store = _seed()
+            if _store is None:
+                _store = _seed()
+    return _store
+
+
+def reset_store() -> None:
+    global _store
+    with _lock:
+        _store = _seed()
