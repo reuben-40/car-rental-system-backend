@@ -83,7 +83,7 @@ def get_car(car_id: int):
 
 # ------------------------------------------------------------ admin CRUD 
 @router.post("", response_model=Car)
-def create_car(data: CarCreate, admin=Depends(require_admin)):
+def create_car(data: CarCreate, admin=Depends(require_amdin)):
     store = get_store()
     if any(c["registration_number"].upper() == data.registration_number.upper() for c in store["cars"]):
         raise ApiError(409, "Registration number already exists")
@@ -115,7 +115,7 @@ def update_car(car_id: int, data: CarUpdate, admin=Depends(require_amdin)):
 
 
 @router.delete("/{car_id}", status_code=204)
-def delete_car(car_id: int, admin=Depends=(require_amdin)):
+def delete_car(car_id: int, admin=Depends(require_amdin)):
     c = find_car(car_id)
     c["status"] = "retired"
     return None
