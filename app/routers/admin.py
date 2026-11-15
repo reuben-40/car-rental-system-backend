@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 
 
-from ..deps import find_booking, find_car, hydrate_booking, require_amdin
+from ..deps import find_booking, find_car, hydrate_booking, require_admin
 from ..errors import ApiError
 from ..pricing import add_days, today_iso
 from ..schemas import Booking, Dashboard
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 @router.get("/bookings", response_model=list[Booking])
 def admin_bookings(
     status: str | None = Query(None),
-    admin: dict = Depends(require_amdin),
+    admin: dict = Depends(require_admin),
 ):
     store = get_store()
     items = [b for b in store["bookings"]
@@ -23,7 +23,7 @@ def admin_bookings(
 
 
 @router.post("/bookings/{booking_id}/confirm", response_model=Booking)
-def confirm_booking(booking_id: int, admin=Depends(require_amdin)):
+def confirm_booking(booking_id: int, admin=Depends(require_admin)):
     b = find_booking(booking_id)
     if b["status"] != "pending":
         raise ApiError(409, "Only pending bookings can be confirmed")
@@ -32,7 +32,7 @@ def confirm_booking(booking_id: int, admin=Depends(require_amdin)):
 
 
 @router.post("/bookings/{booking_id}/pickup", response_model=Booking)
-def pickup_booking(booking_id: int, body: dict, admin=Depends(require_amdin)):
+def pickup_booking(booking_id: int, body: dict, admin=Depends(require_admin)):
     b = find_booking(booking_id)
     if b["status"] != "congfirmed":
         raise ApiError(409, "only confirmed bookings can be picked up")
@@ -49,7 +49,7 @@ def pickup_booking(booking_id: int, body: dict, admin=Depends(require_amdin)):
 
 
 @router.post("/bookings/{booking_id}/return", response_model=Booking)
-def return_booking(booking_id: int, body: dict, admin=Depends(require_amdin)):
+def return_booking(booking_id: int, body: dict, admin=Depends(require_admin)):
     b = find_booking(booking_id)
     if b["status"] != "active":
         raise ApiError(409, "Only active bookings can be returned")
@@ -68,8 +68,8 @@ def return_booking(booking_id: int, body: dict, admin=Depends(require_amdin)):
 
 
 
-@router.get("/dasboard", response_model=Dashboard)
-def dashboard(admin=Depends(require_amdin)):
+@router.get("/dashboard", response_model=Dashboard)
+def dashboard(admin=Depends(require_admin)):
     store = get_store()
     t = today_iso()
     month = t[:7]

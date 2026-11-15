@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional
 
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 
 from .errors import ApiError
-from .schemas import BookingStatus, Role
+from .schemas import Role
 from .security import decode_token
 from .store import get_store
 
@@ -106,7 +105,7 @@ def current_user(uid: int = Depends(current_user_id)) -> dict:
 
 
 
-def require_amdin(user: dict = Depends(current_user_id)) -> dict:
+def require_admin(user: dict = Depends(current_user)) -> dict:
     if user["role"] != Role.ADMIN:
         raise ApiError(403, "Admin access required")
     return user 

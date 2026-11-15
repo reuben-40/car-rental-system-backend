@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, Query
 
 
-from ..deps import car_is_free, car_to_schema, find_car, require_amdin
+from ..deps import car_is_free, car_to_schema, find_car, require_admin
 from ..errors import ApiError
 from ..pricing import BLOCKING_STATUSES, validate_dates
-from ..schemas import (Car, CarCreate, CarDetail, CarUpdate, DateRange, Extra, Paginated)
+from ..schemas import (Car, CarCreate, CarDetail, CarUpdate, Paginated)
 from ..store import get_store
 
 router = APIRouter(prefix="/cars", tags=["cars"])
@@ -49,7 +49,7 @@ def list_cars(
 
 
 
-@router.get("/available", resonse_model=list[Car])
+@router.get("/available", response_model=list[Car])
 def available_cars(
     start: str = Query(...),
     end: str = Query(...),
@@ -83,7 +83,7 @@ def get_car(car_id: int):
 
 # ------------------------------------------------------------ admin CRUD 
 @router.post("", response_model=Car)
-def create_car(data: CarCreate, admin=Depends(require_amdin)):
+def create_car(data: CarCreate, admin=Depends(require_admin)):
     store = get_store()
     if any(c["registration_number"].upper() == data.registration_number.upper() for c in store["cars"]):
         raise ApiError(409, "Registration number already exists")
@@ -101,12 +101,12 @@ def create_car(data: CarCreate, admin=Depends(require_amdin)):
     from datetime import datetime, timezone
     c["created_at"] = datetime.now(timezone.utc).isoformat()
     store["cars"].append(c)
-    return car_to_schema
+    return car_to_schema(c)
 
 
 
 @router.patch("/{car_id}", response_model=Car)
-def update_car(car_id: int, data: CarUpdate, admin=Depends(require_amdin)):
+def update_car(car_id: int, data: CarUpdate, admin=Depends(require_admin)):
     c = find_car(car_id)
     updates = data.model_dump(exclude_unset=True)
     c.update(updates)
@@ -115,7 +115,7 @@ def update_car(car_id: int, data: CarUpdate, admin=Depends(require_amdin)):
 
 
 @router.delete("/{car_id}", status_code=204)
-def delete_car(car_id: int, admin=Depends(require_amdin)):
+def delete_car(car_id: int, admin=Depends(require_admin)):
     c = find_car(car_id)
     c["status"] = "retired"
     return None

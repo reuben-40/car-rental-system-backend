@@ -18,7 +18,7 @@ app.add_middleware(
     allow_origins=["*"] if settings.FRONTEND_ORIGIN == "*" else [settings.FRONTEND_ORIGIN],
     allow_credentials=settings.FRONTEND_ORIGIN !="*",
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["COntent-Type", "Authorization"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 app.include_router(auth.router)

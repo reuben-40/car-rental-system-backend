@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
+
+
 
 from ..deps import current_user
 from ..errors import ApiError
 from ..schemas import TokenResponse, User, UserUpdate
 from ..store import get_store
+from ..security import create_access_token, verify_password
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -38,8 +41,8 @@ def me(user: dict = Depends(current_user)):
     return _public_user(user)
 
 
-@router.patch("/me", response_model=user)
-def update_me(data: UserUpdate, User: dict = Depends(current_user)):
+@router.patch("/me", response_model=User)
+def update_me(data: UserUpdate, user: dict = Depends(current_user)):
     store = get_store()
     u = next(x for x in store["users"] if x ["id"] == user["id"])
     updates = data.model_dump(exclude_unset=True)

@@ -80,7 +80,7 @@ def get_booking(booking_id: int, user: dict = Depends(current_user)):
     return hydrate_booking(b)
 
 
-@router.post("/{booking_id}/cance", response_model=Booking)
+@router.post("/{booking_id}/cancel", response_model=Booking)
 def cancel_booking(booking_id: int , user: dict = Depends(current_user)):
     b = find_booking(booking_id)
     if user["role"] != "admin" and b["user_id"] != user["id"]:
@@ -91,5 +91,5 @@ def cancel_booking(booking_id: int , user: dict = Depends(current_user)):
         raise ApiError(409, "Bookings can only be cancelled before the start date")
     b["status"] = "cancelled"
     from datetime import datetime, timezone
-    b["cancelled_at"] = datetime.now(timezone.utc).sioformat()
+    b["cancelled_at"] = datetime.now(timezone.utc).isoformat()
     return hydrate_booking(b)
