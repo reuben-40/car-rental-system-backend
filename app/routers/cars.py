@@ -56,7 +56,7 @@ def available_cars(
     category: int | None = None,
 ):
     validate_dates(start, end)
-    store = get_store
+    store = get_store()
     out = [
         car_to_schema(c) for c in store["cars"]
         if c["status"] == "available"

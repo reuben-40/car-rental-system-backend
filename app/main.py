@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .routers import admin, auth, bookings, cars, extras
+from .store import save_store
 
 app = FastAPI(
     title="La Squadra d'Oro API",
@@ -20,6 +21,13 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
 )
+
+@app.middleware("http")
+async def persist_changes(request, call_next):
+    response = await call_next(request)
+    if request.method in {"POST", "PATCH", "PUT", "DELETE"}:
+        save_store()
+    return response
 
 app.include_router(auth.router)
 app.include_router(cars.router)

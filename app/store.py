@@ -1,4 +1,7 @@
 from __future__ import annotations
+import json
+import sqlite3
+from pathlib import Path
 
 from datetime import datetime, timezone
 from threading import Lock
@@ -168,7 +171,82 @@ def _seed() -> dict:
 
 
 _store: dict | None = None
+DB_PATH = Path(__file__).resolve().parent.parent / "car_rental.db"
+
+_COLUMNS = {
+    "users": ["id", "full_name", "email", "phone", "role", "password_hash",
+              "licence_number", "licence_expiry", "is_active", "created_at"],
+    "categories": ["id", "name", "description"],
+    "cars": ["id", "category_id", "make", "model", "year", "registration_number",
+             "color", "transmission", "fuel_type", "seats", "daily_rate",
+             "mileage", "status", "primary_image_url", "created_at"],
+    "extras": ["id", "name", "description", "price", "per_day"],
+    "bookings": ["id", "reference", "user_id", "car_id", "start_date", "end_date",
+                 "actual_return_date", "pickup_location", "daily_rate_snapshot",
+                 "days", "subtotal", "extras_total", "extras", "tax", "total_amount",
+                 "deposit", "status", "pickup_mileage", "return_mileage",
+                 "cancelled_at", "created_at"],
+}
+_BOOL_COLS = {"is_active", "per_day"}
+_JSON_COLS = {"extras"}  # the list of extras inside a booking
+
+_store: dict | None = None
 _lock = Lock()
+
+
+def _to_db(col, value):
+    if col in _JSON_COLS:
+        return json.dumps(value)
+    if col in _BOOL_COLS:
+        return int(bool(value))
+    return value
+
+
+def _from_db(col, value):
+    if col in _JSON_COLS:
+        return json.loads(value) if value else []
+    if col in _BOOL_COLS:
+        return bool(value)
+    return value
+
+
+def save_store() -> None:
+    store = get_store()
+    db = sqlite3.connect(DB_PATH)
+    try:
+        with _lock, db:
+            for table, cols in _COLUMNS.items():
+                db.execute(f"DROP TABLE IF EXISTS {table}")
+                defs = ", ".join(c + (" INTEGER PRIMARY KEY" if c == "id" else "") for c in cols)
+                db.execute(f"CREATE TABLE {table} ({defs})")
+                rows = [[_to_db(c, r.get(c)) for c in cols] for r in store[table]]
+                db.executemany(
+                    f"INSERT INTO {table} VALUES ({','.join('?' * len(cols))})", rows
+                )
+            db.execute("DROP TABLE IF EXISTS meta")
+            db.execute("CREATE TABLE meta (key TEXT PRIMARY KEY, value INTEGER)")
+            db.execute("INSERT INTO meta VALUES ('seq', ?)", (store["seq"],))
+    finally:
+        db.close()
+
+
+def _load() -> dict | None:
+    if not DB_PATH.exists():
+        return None
+    db = sqlite3.connect(DB_PATH)
+    db.row_factory = sqlite3.Row
+    try:
+        store = {
+            table: [{c: _from_db(c, row[c]) for c in cols}
+                    for row in db.execute(f"SELECT * FROM {table}")]
+            for table, cols in _COLUMNS.items()
+        }
+        store["seq"] = db.execute("SELECT value FROM meta WHERE key='seq'").fetchone()[0]
+        return store
+    except (sqlite3.Error, TypeError):
+        return None
+    finally:
+        db.close()
 
 
 def get_store() -> dict:
@@ -176,7 +254,7 @@ def get_store() -> dict:
     if _store is None:
         with _lock:
             if _store is None:
-                _store = _seed()
+                _store = _load() or _seed()
     return _store
 
 
@@ -184,3 +262,4 @@ def reset_store() -> None:
     global _store
     with _lock:
         _store = _seed()
+    save_store()
