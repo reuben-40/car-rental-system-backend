@@ -42,7 +42,7 @@ def create_booking(req: BookingCreate, user: dict = Depends(current_user)):
     if not car_is_free(c["id"], req.start_date, req.end_date):
         raise ApiError(409, "Car is already booked for those dates")
 
-    extras = [e for e in store["extras"] if e["id"] in req.extras_ids]
+    extras = [e for e in store["extras"] if e["id"] in req.extra_ids]
     q = calculate_quote(c["daily_rate"], req.start_date, req.end_date, extras)
     store["seq"] += 1
     from datetime import datetime, timezone

@@ -36,7 +36,7 @@ def car_to_schema(c: dict) -> dict:
 def hydrate_booking(b: dict) -> dict:
     store = get_store()
     out = dict(b)
-    car = next((c for c in ["cars"] if c["id"] == b["car_id"]), None)
+    car = next((c for c in store["cars"] if c["id"] == b["car_id"]), None)
     if car:
         out["car"] = car_to_schema(car)
     user = next((u for u in store["users"] if u["id"] == b["user_id"]), None)

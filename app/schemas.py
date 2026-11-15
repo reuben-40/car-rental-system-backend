@@ -174,7 +174,7 @@ class Booking(BaseModel):
     user: Optional[dict] = None
     start_date: str
     end_date: str
-    actual_return_date: str
+    actual_return_date: Optional[str] = None
     pickup_location: str
     daily_rate_snapshot: float
     days: int
