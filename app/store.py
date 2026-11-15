@@ -9,15 +9,30 @@ from threading import Lock
 from .pricing import add_days, calculate_quote, today_iso
 from .security import hash_password
 
-# Car images from Pexels (real, guaranteed-to-load URLs).
-_IMG_ECONOMY = "https://images.pexels.com/photos/32422135/pexels-photo-32422135.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
-_IMG_LUXURY = "https://images.pexels.com/photos/10638649/pexels-photo-10638649.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
-_IMG_SUV = "https://images.pexels.com/photos/13365861/pexels-photo-13365861.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
-_IMG_VAN = "https://images.pexels.com/photos/19548262/pexels-photo-19548262.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
+# Car images stored in static/cars directory, matching each car name
+_CAR_IMAGES = {
+    1: "/static/cars/axio.jpg",
+    2: "/static/cars/demio.jpg",
+    3: "/static/cars/aqua.jpg",
+    4: "/static/cars/prado.jpg",
+    5: "/static/cars/forester.jpg",
+    6: "/static/cars/xtrail.jpg",
+    7: "/static/cars/e-class.jpg",
+    8: "/static/cars/bmw-5-series.jpg",
+    9: "/static/cars/velar.jpg",
+    10: "/static/cars/hiace.jpg",
+}
 
 
-def _img_for(category_id: int) -> str:
-    return {1: _IMG_ECONOMY, 2: _IMG_SUV, 3: _IMG_LUXURY, 4: _IMG_VAN}.get(category_id, _IMG_SUV)
+def _img_for(category_id: int, car_id: int | None = None) -> str:
+    if car_id and car_id in _CAR_IMAGES:
+        return _CAR_IMAGES[car_id]
+    return {
+        1: "/static/cars/axio.jpg",
+        2: "/static/cars/prado.jpg",
+        3: "/static/cars/e-class.jpg",
+        4: "/static/cars/hiace.jpg",
+    }.get(category_id, "/static/cars/prado.jpg")
 
 
 def _seed() -> dict:
@@ -52,7 +67,7 @@ def _seed() -> dict:
             "daily_rate": rate,
             "mileage": mileage,
             "status": status,
-            "primary_image_url": _img_for(cid),
+            "primary_image_url": _img_for(cid, i),
             "created_at": now,
         }
 

@@ -72,7 +72,7 @@ def get_car(car_id: int):
     c = find_car(car_id)
     store = get_store()
     booked = [
-        {"start_date": b["satrt_date"], "end_date": b["end_date"]}
+        {"start_date": b["start_date"], "end_date": b["end_date"]}
         for b in store["bookings"]
         if b["car_id"] == car_id and b["status"] in BLOCKING_STATUSES
     ]
@@ -91,11 +91,10 @@ def create_car(data: CarCreate, admin=Depends(require_admin)):
     c = data.model_dump()
     if not c["primary_image_url"]:
         c["primary_image_url"] = (
-             "https://images.pexels.com/photos/32422135/pexels-photo-32422135.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
-            if c["category_id"] == 1 else
-            "https://images.pexels.com/photos/10638649/pexels-photo-10638649.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
-            if c["category_id"] == 3 else
-            "https://images.pexels.com/photos/13365861/pexels-photo-13365861.jpeg?auto=compress&cs=tinysrgb&h=650&w=940"
+            "/static/cars/axio.jpg" if c["category_id"] == 1 else
+            "/static/cars/prado.jpg" if c["category_id"] == 2 else
+            "/static/cars/e-class.jpg" if c["category_id"] == 3 else
+            "/static/cars/hiace.jpg"
         )
     c["id"] = new_id 
     from datetime import datetime, timezone

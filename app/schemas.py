@@ -80,6 +80,7 @@ class CarBase(BaseModel):
     year: int
     registration_number: str
     color: str = ""
+    colour: Optional[str] = None
     transmission: str = "automatic"
     fuel_type: str = "petrol"
     seats: int = 5
@@ -99,6 +100,7 @@ class CarUpdate(BaseModel):
     year: Optional[int] = None
     registration_number: Optional[str] = None
     color: Optional[str] = None
+    colour: Optional[str] = None
     transmission: Optional[str] = None
     fuel_type: Optional[str] = None
     seats: Optional[int] = None

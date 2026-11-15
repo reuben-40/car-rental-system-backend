@@ -30,6 +30,10 @@ def _category_for(car: dict) -> dict | None:
 def car_to_schema(c: dict) -> dict:
     out = dict(c)
     out["category"] = _category_for(c)
+    if "color" in out and "colour" not in out:
+        out["colour"] = out["color"]
+    elif "colour" in out and "color" not in out:
+        out["color"] = out["colour"]
     return out
 
 
@@ -61,7 +65,7 @@ def car_is_free(car_id: int, start: str, end: str, exclude_id: int | None = None
             continue
         if b["status"] in BLOCKING_STATUSES and overlaps(start, end, b["start_date"], b["end_date"]):
             return False
-        return True
+    return True
 
 
 

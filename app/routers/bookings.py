@@ -51,7 +51,7 @@ def create_booking(req: BookingCreate, user: dict = Depends(current_user)):
         "reference": f"LSD-{store['seq']}",
         "user_id": user["id"], "car_id": c["id"],
         "start_date": req.start_date, "end_date": req.end_date,
-        "actual_rturn_date": None, "pickup_location": req.pickup_location,
+        "actual_return_date": None, "pickup_location": req.pickup_location,
         "daily_rate_snapshot": c["daily_rate"], "days": q["days"],
         "subtotal": q["subtotal"], "extras_total": q["extras_total"],
         "extras": extras, "tax": q["tax"], "total_amount": q["total_amount"], 

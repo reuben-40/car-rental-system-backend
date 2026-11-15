@@ -34,7 +34,7 @@ def confirm_booking(booking_id: int, admin=Depends(require_admin)):
 @router.post("/bookings/{booking_id}/pickup", response_model=Booking)
 def pickup_booking(booking_id: int, body: dict, admin=Depends(require_admin)):
     b = find_booking(booking_id)
-    if b["status"] != "congfirmed":
+    if b["status"] != "confirmed":
         raise ApiError(409, "only confirmed bookings can be picked up")
     c = find_car(b["car_id"])
     pickup_mileage = body.get("pickup_mileage")
@@ -81,7 +81,7 @@ def dashboard(admin=Depends(require_admin)):
     ]
     upcoming.sort(key=lambda b: b["end_date"])
     return {
-        "cars_on_hire": sum(1 for b in store["bookings"] if b["status"] == "ctive"),
+        "cars_on_hire": sum(1 for b in store["bookings"] if b["status"] == "active"),
         "monthly_revenue": sum(
             b["total_amount"] for b in live if b["start_date"][:7] == month
         ),
