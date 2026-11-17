@@ -37,14 +37,15 @@ def list_cars(
         if max_rate:
             items = [c for c in items if c["daily_rate"] <= max_rate]
 
-
-        total = len(items)
-        start = (page - 1) * size
-        end = page * size
-        return {
-            "items": [car_to_schema(c) for c in items[start:end]],
-            "total": total, "page": page, "size": size,
-        }
+    total = len(items)
+    start = (page - 1) * size
+    end = page * size
+    return {
+        "items": [car_to_schema(c) for c in items[start:end]],
+        "total": total,
+        "page": page,
+        "size": size,
+    }
 
 
 
@@ -81,7 +82,6 @@ def get_car(car_id: int):
     return out
 
 
-# ------------------------------------------------------------ admin CRUD 
 @router.post("", response_model=Car)
 def create_car(data: CarCreate, admin=Depends(require_admin)):
     store = get_store()

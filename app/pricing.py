@@ -1,5 +1,3 @@
-"""pricing & availability rules - mirror src/lib/pricing.ts exactly"""
-
 from __future__ import annotations
 from datetime import date, timedelta
 
@@ -15,12 +13,10 @@ def _parse(iso: str) -> date:
 
 
 def days_between(start: str, end:str) -> int:
-    """whole days between start and end (end exclusive)."""
     return (_parse(end) - _parse(start)).days
 
 
 def overlaps(a_start: str, a_end: str, b_start: str, b_end: str) -> bool:
-    """overlap rule: a_start < b_end AND a_end > b_start."""
     return a_start < b_end and a_end > b_start
 
 
@@ -41,7 +37,6 @@ def _kes(c: int) -> float:
 
 
 def calculate_quote(daily_rate: float, start: str, end: str, extras: list) -> dict:
-    """return a Quote dict matching the frontend calculateQuote()."""
     days = days_between(start, end)
     subtotal_c = _cents(daily_rate) * days
     extras_c = 0

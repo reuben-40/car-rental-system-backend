@@ -17,9 +17,6 @@ STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 STATIC_DIR.mkdir(exist_ok=True)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-#The API is authenticated with a bearer token in the authenitacation header,
-#so credentialed (cookie) CORS is not needed; "*" + allow_credentials would
-#make browsers reject the response.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"] if settings.FRONTEND_ORIGIN == "*" else [settings.FRONTEND_ORIGIN],

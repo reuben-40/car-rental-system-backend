@@ -9,7 +9,7 @@ from threading import Lock
 from .pricing import add_days, calculate_quote, today_iso
 from .security import hash_password
 
-# Car images stored in static/cars directory, matching each car name
+
 _CAR_IMAGES = {
     1: "/static/cars/axio.jpg",
     2: "/static/cars/demio.jpg",
@@ -100,7 +100,7 @@ def _seed() -> dict:
         {
             "id": 2,
             "full_name": "Admin",
-            "email": "admin@lasquadradoro.com",
+            "email": "admin@lasquadradoro.co.ke",
             "phone": "+254 700 000 001",
             "role": "admin",
             "password_hash": hash_password("demo1234"),
@@ -112,7 +112,7 @@ def _seed() -> dict:
         {
             "id": 3,
             "full_name": "Otieno Ouma",
-            "email": "otieno@example.com",
+            "email": "otieno@example.co.ke",
             "phone": "+254 722 111 222",
             "role": "customer",
             "password_hash": hash_password("demo1234"),
@@ -186,43 +186,9 @@ def _seed() -> dict:
 
 
 _store: dict | None = None
-DB_PATH = Path(__file__).resolve().parent.parent / "car_rental.db"
+DB_PATH = Path(__file__).resolve().parent.parent / "la_squadra_doro.db"
 
-_COLUMNS = {
-    "users": ["id", "full_name", "email", "phone", "role", "password_hash",
-              "licence_number", "licence_expiry", "is_active", "created_at"],
-    "categories": ["id", "name", "description"],
-    "cars": ["id", "category_id", "make", "model", "year", "registration_number",
-             "color", "transmission", "fuel_type", "seats", "daily_rate",
-             "mileage", "status", "primary_image_url", "created_at"],
-    "extras": ["id", "name", "description", "price", "per_day"],
-    "bookings": ["id", "reference", "user_id", "car_id", "start_date", "end_date",
-                 "actual_return_date", "pickup_location", "daily_rate_snapshot",
-                 "days", "subtotal", "extras_total", "extras", "tax", "total_amount",
-                 "deposit", "status", "pickup_mileage", "return_mileage",
-                 "cancelled_at", "created_at"],
-}
-_BOOL_COLS = {"is_active", "per_day"}
-_JSON_COLS = {"extras"}  # the list of extras inside a booking
-
-_store: dict | None = None
 _lock = Lock()
-
-
-def _to_db(col, value):
-    if col in _JSON_COLS:
-        return json.dumps(value)
-    if col in _BOOL_COLS:
-        return int(bool(value))
-    return value
-
-
-def _from_db(col, value):
-    if col in _JSON_COLS:
-        return json.loads(value) if value else []
-    if col in _BOOL_COLS:
-        return bool(value)
-    return value
 
 
 def save_store() -> None:
@@ -230,17 +196,55 @@ def save_store() -> None:
     db = sqlite3.connect(DB_PATH)
     try:
         with _lock, db:
-            for table, cols in _COLUMNS.items():
-                db.execute(f"DROP TABLE IF EXISTS {table}")
-                defs = ", ".join(c + (" INTEGER PRIMARY KEY" if c == "id" else "") for c in cols)
-                db.execute(f"CREATE TABLE {table} ({defs})")
-                rows = [[_to_db(c, r.get(c)) for c in cols] for r in store[table]]
-                db.executemany(
-                    f"INSERT INTO {table} VALUES ({','.join('?' * len(cols))})", rows
-                )
-            db.execute("DROP TABLE IF EXISTS meta")
-            db.execute("CREATE TABLE meta (key TEXT PRIMARY KEY, value INTEGER)")
-            db.execute("INSERT INTO meta VALUES ('seq', ?)", (store["seq"],))
+            
+            for c in store["cars"]:
+                color_val = c.get("colour") or c.get("color") or "White"
+                db.execute("""
+                    INSERT OR REPLACE INTO cars 
+                    (id, category_id, make, model, year, registration_number, colour, color, transmission, fuel_type, seats, daily_rate, mileage, status, primary_image_url, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    c["id"], c["category_id"], c["make"], c["model"], c["year"],
+                    c["registration_number"], color_val, color_val,
+                    c.get("transmission", "automatic"), c.get("fuel_type", "petrol"),
+                    c.get("seats", 5), c["daily_rate"], c.get("mileage", 0),
+                    c.get("status", "available"), c.get("primary_image_url", ""),
+                    c.get("created_at")
+                ))
+
+            
+            for b in store["bookings"]:
+                extras_json = json.dumps(b.get("extras", [])) if isinstance(b.get("extras"), (list, dict)) else str(b.get("extras") or "[]")
+                db.execute("""
+                    INSERT OR REPLACE INTO bookings 
+                    (id, reference, user_id, car_id, pickup_location, start_date, end_date, actual_return_date, daily_rate_snapshot, days, subtotal, extras_total, extras, tax, total_amount, deposit, status, pickup_mileage, return_mileage, cancelled_at, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    b["id"], b["reference"], b["user_id"], b["car_id"],
+                    b.get("pickup_location", "JKIA - Nairobi Hub"),
+                    b["start_date"], b["end_date"], b.get("actual_return_date"),
+                    b.get("daily_rate_snapshot", 0), b.get("days", 1),
+                    b.get("subtotal", 0), b.get("extras_total", 0), extras_json,
+                    b.get("tax", 0), b.get("total_amount", 0), b.get("deposit", 0),
+                    b.get("status", "pending"), b.get("pickup_mileage"),
+                    b.get("return_mileage"), b.get("cancelled_at"), b.get("created_at")
+                ))
+
+            
+            for u in store["users"]:
+                pwd = u.get("password_hash") or u.get("hashed_password") or ""
+                db.execute("""
+                    INSERT OR REPLACE INTO users 
+                    (id, full_name, email, phone, hashed_password, password_hash, role, licence_number, licence_expiry, is_active, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    u["id"], u["full_name"], u["email"], u["phone"],
+                    pwd, pwd, u.get("role", "customer"),
+                    u.get("licence_number"), u.get("licence_expiry"),
+                    int(bool(u.get("is_active", True))), u.get("created_at")
+                ))
+
+            db.execute("INSERT OR REPLACE INTO meta (key, value) VALUES ('seq', ?)", (store["seq"],))
     finally:
         db.close()
 
@@ -251,14 +255,53 @@ def _load() -> dict | None:
     db = sqlite3.connect(DB_PATH)
     db.row_factory = sqlite3.Row
     try:
-        store = {
-            table: [{c: _from_db(c, row[c]) for c in cols}
-                    for row in db.execute(f"SELECT * FROM {table}")]
-            for table, cols in _COLUMNS.items()
+        categories = [dict(r) for r in db.execute("SELECT * FROM categories")]
+        users = [dict(r) for r in db.execute("SELECT * FROM users")]
+        for u in users:
+            if not u.get("password_hash") and u.get("hashed_password"):
+                u["password_hash"] = u["hashed_password"]
+            u["is_active"] = bool(u.get("is_active"))
+
+        cars = [dict(r) for r in db.execute("SELECT * FROM cars")]
+        for c in cars:
+            if not c.get("color") and c.get("colour"):
+                c["color"] = c["colour"]
+            elif not c.get("colour") and c.get("color"):
+                c["colour"] = c["color"]
+            if not c.get("primary_image_url"):
+                c["primary_image_url"] = _img_for(c.get("category_id", 1), c.get("id"))
+
+        extras = [dict(r) for r in db.execute("SELECT * FROM extras")]
+        for e in extras:
+            if "price" not in e and "price_per_day" in e:
+                e["price"] = e["price_per_day"]
+            if "per_day" not in e and "is_flat_rate" in e:
+                e["per_day"] = not bool(e["is_flat_rate"])
+            else:
+                e["per_day"] = bool(e.get("per_day"))
+
+        bookings = [dict(r) for r in db.execute("SELECT * FROM bookings")]
+        for b in bookings:
+            if isinstance(b.get("extras"), str):
+                try:
+                    b["extras"] = json.loads(b["extras"])
+                except Exception:
+                    b["extras"] = []
+            elif not b.get("extras"):
+                b["extras"] = []
+
+        meta_row = db.execute("SELECT value FROM meta WHERE key='seq'").fetchone()
+        seq = meta_row[0] if meta_row else 1050
+
+        return {
+            "users": users,
+            "categories": categories,
+            "cars": cars,
+            "extras": extras,
+            "bookings": bookings,
+            "seq": seq,
         }
-        store["seq"] = db.execute("SELECT value FROM meta WHERE key='seq'").fetchone()[0]
-        return store
-    except (sqlite3.Error, TypeError):
+    except Exception as e:
         return None
     finally:
         db.close()

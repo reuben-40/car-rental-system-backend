@@ -1,5 +1,3 @@
-"""FASTAPI dependencies for auth, plus store helpers (hydrate, lookup)."""
-
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -21,7 +19,6 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-# --------------------------------------------------------------- lookups
 def _category_for(car: dict) -> dict | None:
     store = get_store()
     return next((c for c in store["categories"] if c["id"] == car["category_id"]), None)
@@ -88,7 +85,6 @@ def find_booking(booking_id: int) -> dict:
 
 
 
-# ----------------------------------------------------------------------  auth deps
 def current_user_id(token: str = Depends(oauth2_scheme)) -> int:
     uid = decode_token(token)
     if uid is None:
